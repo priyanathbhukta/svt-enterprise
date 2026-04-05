@@ -236,6 +236,27 @@ img {
     line-height: 1.1;
 }
 
+.hero-tagline {
+    display: inline-block;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: rgba(255, 69, 0, 0.18);
+    border: 1.5px solid rgba(255, 138, 101, 0.55);
+    backdrop-filter: blur(6px);
+    padding: 8px 22px;
+    border-radius: 30px;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    animation: fadeIn 1.2s ease-out forwards;
+}
+
+.hero-tagline i {
+    color: var(--accent);
+    margin-right: 6px;
+}
+
 .hero-subtitle {
     font-size: 1.25rem;
     margin-bottom: 40px;
