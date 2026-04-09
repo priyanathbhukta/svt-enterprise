@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | SVT Enterprise</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            background: #0d0d0d;
+            overflow: hidden;
+        }
+
+        .bg-glow {
+            position: fixed; border-radius: 50%; pointer-events: none;
+        }
+        .bg-glow-1 {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(255,69,0,0.07) 0%, transparent 70%);
+            top: -200px; right: -200px;
+            animation: glow-pulse 7s ease-in-out infinite;
+        }
+        .bg-glow-2 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(211,47,47,0.05) 0%, transparent 70%);
+            bottom: -100px; left: -100px;
+            animation: glow-pulse 9s ease-in-out infinite reverse;
+        }
+        @keyframes glow-pulse {
+            0%, 100% { transform: scale(1); opacity: .5; }
+            50% { transform: scale(1.15); opacity: 1; }
+        }
+
+        .login-card {
+            position: relative; z-index: 10;
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 50px 45px;
+            width: 100%; max-width: 430px;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+            animation: card-in 0.5s ease-out;
+        }
+        @keyframes card-in {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .brand {
+            text-align: center; margin-bottom: 30px;
+        }
+        .brand img {
+            width: 85px; height: auto;
+            filter: drop-shadow(0 0 20px rgba(255,69,0,0.5));
+            margin-bottom: 14px;
+        }
+        .brand-badge {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(255,69,0,0.12);
+            border: 1px solid rgba(255,69,0,0.28);
+            color: #ff7043;
+            padding: 5px 16px; border-radius: 30px;
+            font-size: 0.75rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .brand h1 { font-size: 1.85rem; font-weight: 800; color: #fff; margin-bottom: 5px; }
+        .brand p  { font-size: 0.82rem; color: rgba(255,255,255,0.35); }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            margin: 24px 0;
+        }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block; color: rgba(255,255,255,0.55);
+            font-size: 0.83rem; font-weight: 500; margin-bottom: 8px;
+        }
+        .input-wrap { position: relative; }
+        .input-wrap .ico {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: rgba(255,255,255,0.25); font-size: 0.88rem;
+        }
+        .input-wrap input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 13px 42px;
+            color: #fff; font-size: 0.95rem; font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+        .input-wrap input:focus {
+            outline: none;
+            border-color: rgba(255,69,0,0.55);
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 0 0 3px rgba(255,69,0,0.12);
+        }
+        .input-wrap input::placeholder { color: rgba(255,255,255,0.18); }
+        .eye-btn {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            cursor: pointer; color: rgba(255,255,255,0.25); font-size: 0.88rem;
+            transition: color 0.2s; background: none; border: none;
+        }
+        .eye-btn:hover { color: rgba(255,255,255,0.55); }
+
+        .btn-login {
+            width: 100%; padding: 14px;
+            background: linear-gradient(90deg, #d32f2f, #ff4500);
+            border: none; border-radius: 12px;
+            color: #fff; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-top: 8px;
+            box-shadow: 0 8px 25px rgba(255,69,0,0.35);
+        }
+        .btn-login:hover:not(:disabled) { box-shadow: 0 12px 35px rgba(255,69,0,0.55); transform: translateY(-2px); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .error-box {
+            display: none;
+            background: rgba(244,67,54,0.12);
+            border: 1px solid rgba(244,67,54,0.3);
+            color: #ef9a9a; padding: 11px 15px;
+            border-radius: 10px; font-size: 0.87rem;
+            margin-top: 14px; text-align: center;
+        }
+
+        .back-link { text-align: center; margin-top: 24px; }
+        .back-link a { color: rgba(255,255,255,0.3); font-size: 0.83rem; text-decoration: none; transition: color 0.2s; }
+        .back-link a:hover { color: rgba(255,255,255,0.6); }
+
+        @media (max-width: 480px) {
+            .login-card { margin: 20px; padding: 35px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="login-card">
+        <div class="brand">
+            <img src="../../logo.png" alt="SVT Logo">
+            <div class="brand-badge"><i class="fas fa-shield-halved"></i> Secure Admin</div>
+            <h1>Welcome Back</h1>
+            <p>Siddhi Vinayak Tech Enterprise</p>
+        </div>
+        <div class="divider"></div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="adminId"><i class="fas fa-id-card"></i> &nbsp;Phone / Admin ID</label>
+                <div class="input-wrap">
+                    <i class="fas fa-user ico"></i>
+                    <input type="text" id="adminId" placeholder="Enter your admin ID" autocomplete="username" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="adminPwd"><i class="fas fa-lock"></i> &nbsp;Password</label>
+                <div class="input-wrap">
+                    <i class="fas fa-key ico"></i>
+                    <input type="password" id="adminPwd" placeholder="Enter your password" autocomplete="current-password" required>
+                    <button type="button" class="eye-btn" id="togglePwd"><i class="fas fa-eye"></i></button>
+                </div>
+            </div>
+            <button type="submit" class="btn-login" id="loginBtn">
+                <i class="fas fa-right-to-bracket"></i> Sign In to Dashboard
+            </button>
+            <div class="error-box" id="errorBox">
+                <i class="fas fa-circle-exclamation"></i> Invalid credentials. Please try again.
+            </div>
+        </form>
+
+        <div class="back-link">
+            <a href="/"><i class="fas fa-arrow-left"></i> Back to Website</a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="../../firebase-config.js"></script>
+    <script>
+        const ADMIN_ID   = '6291589954';
+        const ADMIN_PASS = '8582938476Svt';
+
+        // Toggle password visibility
+        document.getElementById('togglePwd').addEventListener('click', function () {
+            const pwd = document.getElementById('adminPwd');
+            const show = pwd.type === 'password';
+            pwd.type = show ? 'text' : 'password';
+            this.innerHTML = `<i class="fas ${show ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+        });
+
+        // Init Firebase
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        } catch (e) { console.warn('Firebase init skipped:', e); }
+
+        const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
+
+        // If already logged in, go straight to dashboard
+        if (auth) {
+            auth.onAuthStateChanged(user => {
+                if (user && sessionStorage.getItem('svt_admin')) {
+                    window.location.href = '/admin/dashboard/';
+                }
+            });
+        }
+
+        // Login handler
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const id  = document.getElementById('adminId').value.trim();
+            const pwd = document.getElementById('adminPwd').value;
+            const btn = document.getElementById('loginBtn');
+            const err = document.getElementById('errorBox');
+
+            err.style.display = 'none';
+
+            if (id !== ADMIN_ID || pwd !== ADMIN_PASS) {
+                err.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Signing in...';
+
+            try {
+                if (auth) await auth.signInAnonymously();
+            } catch (firebaseErr) {
+                console.warn('Firebase anon auth failed:', firebaseErr);
+            }
+
+            sessionStorage.setItem('svt_admin', '1');
+            window.location.href = '/admin/dashboard/';
+        });
+    </script>
+</body>
+</html>

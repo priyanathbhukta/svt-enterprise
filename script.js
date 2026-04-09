@@ -98,3 +98,98 @@ contactForm.addEventListener('submit', (e) => {
             submitBtn.textContent = 'Send Message';
         });
 });
+
+// ─── Previous Works Gallery (Firebase Firestore) ────────────────────────────
+const WORKS_PER_PAGE = 9;
+let allWorksData     = [];
+let currentWorksPage = 1;
+
+const STATIC_FALLBACK = [
+    'assets/WhatsApp Image 2026-03-29 at 19.42.01.jpeg',
+    'assets/WhatsApp Image 2026-03-29 at 19.42.01 (1).jpeg',
+    'assets/WhatsApp Image 2026-03-29 at 19.42.01 (2).jpeg',
+    'assets/WhatsApp Image 2026-03-29 at 19.42.02.jpeg',
+    'assets/WhatsApp Image 2026-03-29 at 19.42.02 (1).jpeg',
+    'assets/WhatsApp Image 2026-03-29 at 19.42.02 (2).jpeg',
+    'assets/WhatsApp Image 2026-03-29 at 19.42.03.jpeg',
+    'assets/WhatsApp Image 2026-03-29 at 19.42.03 (1).jpeg',
+    'assets/WhatsApp Image 2026-03-29 at 19.42.03 (2).jpeg',
+];
+
+function showStaticWorks() {
+    allWorksData = STATIC_FALLBACK.map(url => ({ url, uploadedAt: null }));
+    renderWorksPage(1);
+}
+
+function renderWorksPage(page) {
+    const grid    = document.getElementById('works-grid');
+    const loading = document.getElementById('works-loading');
+    const empty   = document.getElementById('works-empty');
+    const pag     = document.getElementById('works-pagination');
+
+    loading.style.display = 'none';
+
+    if (!allWorksData.length) {
+        empty.style.display = 'flex';
+        grid.style.display  = 'none';
+        pag.style.display   = 'none';
+        return;
+    }
+
+    empty.style.display = 'none';
+    grid.style.display  = 'grid';
+
+    const total  = Math.ceil(allWorksData.length / WORKS_PER_PAGE);
+    const start  = (page - 1) * WORKS_PER_PAGE;
+    const items  = allWorksData.slice(start, start + WORKS_PER_PAGE);
+    currentWorksPage = page;
+
+    grid.innerHTML = items.map(w => `
+        <div class="work-card">
+            <img src="${w.url}" alt="Solar Installation Work" loading="lazy">
+        </div>
+    `).join('');
+
+    if (total > 1) {
+        pag.style.display = 'flex';
+        document.getElementById('works-page-info').textContent = `Page ${page} of ${total}`;
+        document.getElementById('works-prev-btn').disabled = page <= 1;
+        document.getElementById('works-next-btn').disabled = page >= total;
+    } else {
+        pag.style.display = 'none';
+    }
+}
+
+function changeWorksPage(delta) {
+    const total = Math.ceil(allWorksData.length / WORKS_PER_PAGE);
+    const np    = currentWorksPage + delta;
+    if (np >= 1 && np <= total) {
+        renderWorksPage(np);
+        document.getElementById('works').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function initWorksGallery() {
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        db.collection('works')
+          .orderBy('uploadedAt', 'desc')
+          .onSnapshot(snapshot => {
+              allWorksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              if (!allWorksData.length) { showStaticWorks(); return; }
+              const total = Math.ceil(allWorksData.length / WORKS_PER_PAGE);
+              if (currentWorksPage > total) currentWorksPage = 1;
+              renderWorksPage(currentWorksPage);
+          }, err => {
+              console.warn('Firebase gallery error:', err);
+              showStaticWorks();
+          });
+    } catch (e) {
+        console.warn('Firebase not available, using static fallback:', e);
+        showStaticWorks();
+    }
+}
+
+initWorksGallery();
+// ────────────────────────────────────────────────────────────────────────────

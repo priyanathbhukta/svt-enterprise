@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | SVT Enterprise</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        :root {
+            --primary: #ff4500;
+            --secondary: #d32f2f;
+            --bg: #0d0d0d;
+            --surface: #181818;
+            --surface2: #222222;
+            --border: rgba(255,255,255,0.07);
+            --text: #f0f0f0;
+            --muted: rgba(255,255,255,0.4);
+        }
+
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ── HEADER ── */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        .header-brand { display: flex; align-items: center; gap: 14px; }
+        .header-brand img { height: 44px; width: auto; filter: drop-shadow(0 0 10px rgba(255,69,0,0.4)); }
+        .header-brand-text h2 { font-size: 1.1rem; font-weight: 700; color: #fff; }
+        .header-brand-text p  { font-size: 0.75rem; color: var(--muted); }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .btn-header {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 9px 18px; border-radius: 10px;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.25s; border: none; text-decoration: none;
+        }
+        .btn-view  { background: rgba(255,255,255,0.07); color: var(--text); }
+        .btn-view:hover { background: rgba(255,255,255,0.12); }
+        .btn-logout { background: rgba(255,69,0,0.15); color: #ff7043; border: 1px solid rgba(255,69,0,0.25); }
+        .btn-logout:hover { background: rgba(255,69,0,0.25); }
+
+        /* ── LAYOUT ── */
+        .main { padding: 32px 28px; max-width: 1300px; margin: 0 auto; }
+
+        /* ── STATS BAR ── */
+        .stats-bar {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 22px 24px;
+            display: flex; align-items: center; gap: 16px;
+            transition: border-color 0.2s;
+        }
+        .stat-card:hover { border-color: rgba(255,69,0,0.3); }
+        .stat-icon {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255,69,0,0.2), rgba(211,47,47,0.2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; color: var(--primary);
+        }
+        .stat-info h3 { font-size: 1.7rem; font-weight: 800; color: #fff; }
+        .stat-info p  { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+        /* ── UPLOAD SECTION ── */
+        .section-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 28px 30px; margin-bottom: 28px;
+        }
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px;
+        }
+        .section-header h2 { font-size: 1.15rem; font-weight: 700; color: #fff; }
+        .section-header p  { font-size: 0.82rem; color: var(--muted); margin-top: 3px; }
+
+        .drop-zone {
+            border: 2px dashed rgba(255,69,0,0.3);
+            border-radius: 16px; padding: 50px 30px;
+            text-align: center; cursor: pointer;
+            transition: all 0.3s; position: relative;
+            background: rgba(255,69,0,0.02);
+        }
+        .drop-zone.drag-over {
+            border-color: var(--primary);
+            background: rgba(255,69,0,0.08);
+            transform: scale(1.01);
+        }
+        .drop-zone input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+        }
+        .drop-icon { font-size: 3rem; color: rgba(255,69,0,0.5); margin-bottom: 14px; }
+        .drop-title { font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 6px; }
+        .drop-subtitle { font-size: 0.85rem; color: var(--muted); }
+        .drop-accent { color: var(--primary); font-weight: 600; }
+
+        /* ── UPLOAD QUEUE ── */
+        .upload-queue { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .queue-item {
+            background: var(--surface2); border-radius: 12px; padding: 14px 16px;
+            display: flex; align-items: center; gap: 14px;
+            border: 1px solid var(--border);
+        }
+        .queue-thumb {
+            width: 54px; height: 54px; border-radius: 8px; object-fit: cover;
+            flex-shrink: 0; background: #333;
+        }
+        .queue-info { flex: 1; min-width: 0; }
+        .queue-name { font-size: 0.88rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .queue-size { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+        .progress-bar-wrap { height: 5px; background: rgba(255,255,255,0.08); border-radius: 99px; margin-top: 8px; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--secondary), var(--primary)); width: 0; transition: width 0.3s; }
+        .queue-status { font-size: 0.78rem; color: var(--muted); flex-shrink: 0; min-width: 60px; text-align: right; }
+        .queue-status.done  { color: #66bb6a; }
+        .queue-status.error { color: #ef5350; }
+
+        /* ── GALLERY SECTION ── */
+        .gallery-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+        }
+        .gallery-header h2 { font-size: 1.15rem; font-weight: 700; color: #fff; }
+        .photo-count {
+            background: rgba(255,69,0,0.15); border: 1px solid rgba(255,69,0,0.25);
+            color: #ff7043; padding: 4px 14px; border-radius: 99px; font-size: 0.8rem; font-weight: 600;
+        }
+
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+        }
+        .gallery-card {
+            position: relative; border-radius: 14px; overflow: hidden;
+            background: var(--surface2); border: 1px solid var(--border);
+            aspect-ratio: 1; cursor: pointer;
+            transition: transform 0.25s, border-color 0.25s;
+        }
+        .gallery-card:hover { transform: translateY(-4px); border-color: rgba(255,69,0,0.4); }
+        .gallery-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .gallery-card-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(0deg, rgba(0,0,0,0.85) 0%, transparent 50%);
+            opacity: 0; transition: opacity 0.25s;
+            display: flex; align-items: flex-end; padding: 12px;
+        }
+        .gallery-card:hover .gallery-card-overlay { opacity: 1; }
+        .card-date { font-size: 0.72rem; color: rgba(255,255,255,0.7); flex: 1; }
+        .btn-delete {
+            background: rgba(244,67,54,0.85); border: none; color: #fff;
+            width: 32px; height: 32px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; transition: background 0.2s;
+        }
+        .btn-delete:hover { background: #f44336; }
+
+        /* ── PAGINATION ── */
+        .pagination {
+            display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 24px;
+        }
+        .btn-page {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); padding: 9px 18px;
+            border-radius: 10px; cursor: pointer;
+            font-size: 0.85rem; font-weight: 600; transition: all 0.2s;
+            display: flex; align-items: center; gap: 7px;
+        }
+        .btn-page:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .btn-page:disabled { opacity: 0.35; cursor: not-allowed; }
+        .page-info { color: var(--muted); font-size: 0.88rem; min-width: 100px; text-align: center; }
+
+        /* ── EMPTY / LOADING ── */
+        .gallery-empty, .gallery-loading {
+            grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--muted);
+        }
+        .gallery-empty i, .gallery-loading i { font-size: 3rem; margin-bottom: 14px; display: block; }
+        .gallery-loading i { color: var(--primary); }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 14px; padding: 14px 20px;
+            display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.35s ease; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success .toast-icon { color: #66bb6a; }
+        .toast.error   .toast-icon { color: #ef5350; }
+        .toast-msg { font-size: 0.9rem; color: #fff; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+            .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .main { padding: 20px 16px; }
+            .stats-bar { grid-template-columns: 1fr; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+            .header { padding: 14px 16px; }
+            .header-brand-text { display: none; }
+        }
+        @media (max-width: 480px) {
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-brand">
+            <img src="../../logo.png" alt="SVT Logo">
+            <div class="header-brand-text">
+                <h2>SVT Admin Dashboard</h2>
+                <p>Siddhi Vinayak Tech Enterprise</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="/" target="_blank" class="btn-header btn-view">
+                <i class="fas fa-globe"></i> View Website
+            </a>
+            <button class="btn-header btn-logout" id="logoutBtn">
+                <i class="fas fa-right-from-bracket"></i> Logout
+            </button>
+        </div>
+    </header>
+
+    <main class="main">
+
+        <!-- STATS -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-images"></i></div>
+                <div class="stat-info">
+                    <h3 id="statTotal">—</h3>
+                    <p>Total Photos</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+                <div class="stat-info">
+                    <h3 id="statToday">—</h3>
+                    <p>Uploaded Today</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-info">
+                    <h3 id="statDate">—</h3>
+                    <p>Last Upload</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPLOAD -->
+        <div class="section-card">
+            <div class="section-header">
+                <div>
+                    <h2><i class="fas fa-cloud-arrow-up"></i> &nbsp;Upload Photos</h2>
+                    <p>Drag & drop or click to choose. Multiple files supported. Uploads go live instantly.</p>
+                </div>
+            </div>
+            <div class="drop-zone" id="dropZone">
+                <input type="file" id="fileInput" accept="image/*" multiple>
+                <div class="drop-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+                <div class="drop-title">Drop photos here</div>
+                <div class="drop-subtitle">or <span class="drop-accent">click to browse</span> &mdash; JPG, PNG, WEBP supported</div>
+            </div>
+            <div class="upload-queue" id="uploadQueue"></div>
+        </div>
+
+        <!-- GALLERY -->
+        <div class="section-card">
+            <div class="gallery-header">
+                <div>
+                    <h2><i class="fas fa-photo-film"></i> &nbsp;Uploaded Photos</h2>
+                    <p style="font-size:.82rem;color:var(--muted);margin-top:3px;">Newest first. Hover a photo to delete.</p>
+                </div>
+                <span class="photo-count" id="photoCount">0 photos</span>
+            </div>
+
+            <div class="gallery-grid" id="galleryGrid">
+                <div class="gallery-loading">
+                    <i class="fas fa-solar-panel fa-spin"></i>
+                    <p>Loading photos...</p>
+                </div>
+            </div>
+
+            <div class="pagination" id="galleryPagination" style="display:none;">
+                <button class="btn-page" id="prevBtn" onclick="changePage(-1)">
+                    <i class="fas fa-chevron-left"></i> Prev
+                </button>
+                <span class="page-info" id="pageInfo">Page 1 of 1</span>
+                <button class="btn-page" id="nextBtn" onclick="changePage(1)">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">
+        <i class="fas toast-icon" id="toastIcon"></i>
+        <span class="toast-msg" id="toastMsg"></span>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+    <script src="../../firebase-config.js"></script>
+    <script>
+        // ── AUTH GUARD ──────────────────────────────────────────────────────────
+        if (!sessionStorage.getItem('svt_admin')) {
+            window.location.href = '/admin/login/';
+        }
+
+        // ── FIREBASE INIT ────────────────────────────────────────────────────────
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth    = firebase.auth();
+        const db      = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Re-sign in anon if needed (page refresh)
+        auth.onAuthStateChanged(user => {
+            if (!user) auth.signInAnonymously().catch(console.warn);
+        });
+
+        // ── LOGOUT ───────────────────────────────────────────────────────────────
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            sessionStorage.removeItem('svt_admin');
+            try { await auth.signOut(); } catch (e) {}
+            window.location.href = '/admin/login/';
+        });
+
+        // ── TOAST ─────────────────────────────────────────────────────────────────
+        let toastTimer;
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            const i = document.getElementById('toastIcon');
+            document.getElementById('toastMsg').textContent = msg;
+            t.className = `toast ${type} show`;
+            i.className = `fas toast-icon ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3500);
+        }
+
+        // ── GALLERY ───────────────────────────────────────────────────────────────
+        const PER_PAGE = 12;
+        let allPhotos = [];
+        let currentPage = 1;
+
+        function formatDate(ts) {
+            if (!ts) return '';
+            const d = ts.toDate ? ts.toDate() : new Date(ts);
+            return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function updateStats() {
+            document.getElementById('statTotal').textContent = allPhotos.length;
+            const today = new Date().toDateString();
+            const todayCount = allPhotos.filter(p => {
+                if (!p.uploadedAt) return false;
+                const d = p.uploadedAt.toDate ? p.uploadedAt.toDate() : new Date(p.uploadedAt);
+                return d.toDateString() === today;
+            }).length;
+            document.getElementById('statToday').textContent = todayCount;
+            if (allPhotos.length > 0 && allPhotos[0].uploadedAt) {
+                const d = allPhotos[0].uploadedAt.toDate ? allPhotos[0].uploadedAt.toDate() : new Date(allPhotos[0].uploadedAt);
+                document.getElementById('statDate').textContent = d.toLocaleDateString('en-IN', { day:'2-digit', month:'short' });
+            } else {
+                document.getElementById('statDate').textContent = '—';
+            }
+        }
+
+        function renderGallery(page) {
+            const grid  = document.getElementById('galleryGrid');
+            const pag   = document.getElementById('galleryPagination');
+            const total = Math.ceil(allPhotos.length / PER_PAGE);
+            currentPage = page;
+
+            document.getElementById('photoCount').textContent = `${allPhotos.length} photo${allPhotos.length !== 1 ? 's' : ''}`;
+            updateStats();
+
+            if (!allPhotos.length) {
+                grid.innerHTML = '<div class="gallery-empty"><i class="fas fa-images"></i><p>No photos yet. Upload your first one above!</p></div>';
+                pag.style.display = 'none';
+                return;
+            }
+
+            const slice = allPhotos.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+            grid.innerHTML = slice.map(p => `
+                <div class="gallery-card" data-id="${p.id}" data-path="${p.storagePath || ''}">
+                    <img src="${p.url}" alt="Work photo" loading="lazy">
+                    <div class="gallery-card-overlay">
+                        <span class="card-date">${formatDate(p.uploadedAt)}</span>
+                        <button class="btn-delete" onclick="deletePhoto('${p.id}', '${p.storagePath || ''}', event)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            if (total > 1) {
+                pag.style.display = 'flex';
+                document.getElementById('pageInfo').textContent = `Page ${page} of ${total}`;
+                document.getElementById('prevBtn').disabled = page <= 1;
+                document.getElementById('nextBtn').disabled = page >= total;
+            } else {
+                pag.style.display = 'none';
+            }
+        }
+
+        function changePage(delta) {
+            const total = Math.ceil(allPhotos.length / PER_PAGE);
+            const np = currentPage + delta;
+            if (np >= 1 && np <= total) renderGallery(np);
+        }
+
+        // Real-time listener
+        db.collection('works').orderBy('uploadedAt', 'desc').onSnapshot(snapshot => {
+            allPhotos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const total = Math.ceil(allPhotos.length / PER_PAGE);
+            if (currentPage > total && total > 0) currentPage = total;
+            renderGallery(currentPage);
+        }, err => {
+            console.error('Firestore error:', err);
+            document.getElementById('galleryGrid').innerHTML =
+                '<div class="gallery-empty"><i class="fas fa-triangle-exclamation"></i><p>Could not load photos. Check Firebase config.</p></div>';
+        });
+
+        // ── DELETE ────────────────────────────────────────────────────────────────
+        async function deletePhoto(id, storagePath, e) {
+            e.stopPropagation();
+            if (!confirm('Delete this photo? This cannot be undone.')) return;
+            try {
+                await db.collection('works').doc(id).delete();
+                if (storagePath) {
+                    await storage.ref(storagePath).delete().catch(() => {});
+                }
+                showToast('Photo deleted.', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('Delete failed. Try again.', 'error');
+            }
+        }
+
+        // ── UPLOAD ────────────────────────────────────────────────────────────────
+        const dropZone  = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const queue     = document.getElementById('uploadQueue');
+
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        function handleFiles(files) {
+            if (!files || !files.length) return;
+            Array.from(files).forEach(uploadFile);
+        }
+
+        function fmtSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function uploadFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast(`${file.name} is not an image.`, 'error'); return;
+            }
+
+            const id = `qi_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const item = document.createElement('div');
+                item.className = 'queue-item';
+                item.id = id;
+                item.innerHTML = `
+                    <img class="queue-thumb" src="${ev.target.result}" alt="">
+                    <div class="queue-info">
+                        <div class="queue-name">${file.name}</div>
+                        <div class="queue-size">${fmtSize(file.size)}</div>
+                        <div class="progress-bar-wrap"><div class="progress-bar" id="pb_${id}"></div></div>
+                    </div>
+                    <span class="queue-status" id="qs_${id}">0%</span>
+                `;
+                queue.prepend(item);
+
+                const storagePath = `works/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+                const ref = storage.ref(storagePath);
+                const task = ref.put(file);
+
+                task.on('state_changed',
+                    snap => {
+                        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                        document.getElementById(`pb_${id}`).style.width = pct + '%';
+                        document.getElementById(`qs_${id}`).textContent = pct + '%';
+                    },
+                    err => {
+                        console.error(err);
+                        const qs = document.getElementById(`qs_${id}`);
+                        if (qs) { qs.textContent = 'Error'; qs.className = 'queue-status error'; }
+                        showToast(`Upload failed: ${file.name}`, 'error');
+                    },
+                    async () => {
+                        try {
+                            const url = await ref.getDownloadURL();
+                            await db.collection('works').add({
+                                url,
+                                storagePath,
+                                filename: file.name,
+                                uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            const qs = document.getElementById(`qs_${id}`);
+                            if (qs) { qs.textContent = 'Done ✓'; qs.className = 'queue-status done'; }
+                            showToast(`${file.name} uploaded!`, 'success');
+                            // Remove queue item after 4s
+                            setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 4000);
+                        } catch (e) {
+                            console.error(e);
+                            showToast('Error saving to database.', 'error');
+                        }
+                    }
+                );
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
