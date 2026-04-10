@@ -7,7 +7,7 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
@@ -314,33 +314,40 @@
         <span class="toast-msg" id="toastMsg"></span>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-    <script src="../../firebase-config.js"></script>
+    <!-- Admin Dashboard Script (no Firebase) -->
     <script>
         // ── AUTH GUARD ──────────────────────────────────────────────────────────
         if (!sessionStorage.getItem('svt_admin')) {
             window.location.href = '/admin/login/';
         }
 
-        // ── FIREBASE INIT ────────────────────────────────────────────────────────
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const auth    = firebase.auth();
-        const db      = firebase.firestore();
-        const storage = firebase.storage();
+        // ── STORAGE HELPERS ──────────────────────────────────────────────────────
+        const STORAGE_KEY = 'svt_works';
 
-        // Re-sign in anon if needed (page refresh)
-        auth.onAuthStateChanged(user => {
-            if (!user) auth.signInAnonymously().catch(console.warn);
-        });
+        function loadPhotos() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    return Array.isArray(data) ? data : [];
+                }
+            } catch (e) { console.warn('loadPhotos error:', e); }
+            return [];
+        }
+
+        function savePhotos(photos) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
+            } catch (e) {
+                // localStorage quota exceeded
+                showToast('Storage full! Delete some photos to free space.', 'error');
+                console.warn('savePhotos error:', e);
+            }
+        }
 
         // ── LOGOUT ───────────────────────────────────────────────────────────────
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        document.getElementById('logoutBtn').addEventListener('click', () => {
             sessionStorage.removeItem('svt_admin');
-            try { await auth.signOut(); } catch (e) {}
             window.location.href = '/admin/login/';
         });
 
@@ -363,8 +370,7 @@
 
         function formatDate(ts) {
             if (!ts) return '';
-            const d = ts.toDate ? ts.toDate() : new Date(ts);
-            return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            return new Date(ts).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
         }
 
         function updateStats() {
@@ -372,16 +378,23 @@
             const today = new Date().toDateString();
             const todayCount = allPhotos.filter(p => {
                 if (!p.uploadedAt) return false;
-                const d = p.uploadedAt.toDate ? p.uploadedAt.toDate() : new Date(p.uploadedAt);
-                return d.toDateString() === today;
+                return new Date(p.uploadedAt).toDateString() === today;
             }).length;
             document.getElementById('statToday').textContent = todayCount;
             if (allPhotos.length > 0 && allPhotos[0].uploadedAt) {
-                const d = allPhotos[0].uploadedAt.toDate ? allPhotos[0].uploadedAt.toDate() : new Date(allPhotos[0].uploadedAt);
-                document.getElementById('statDate').textContent = d.toLocaleDateString('en-IN', { day:'2-digit', month:'short' });
+                document.getElementById('statDate').textContent =
+                    new Date(allPhotos[0].uploadedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
             } else {
                 document.getElementById('statDate').textContent = '—';
             }
+        }
+
+        function refreshGallery() {
+            allPhotos = loadPhotos().sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
+            const total = Math.ceil(allPhotos.length / PER_PAGE);
+            if (currentPage > total && total > 0) currentPage = total;
+            if (currentPage < 1) currentPage = 1;
+            renderGallery(currentPage);
         }
 
         function renderGallery(page) {
@@ -401,11 +414,11 @@
 
             const slice = allPhotos.slice((page - 1) * PER_PAGE, page * PER_PAGE);
             grid.innerHTML = slice.map(p => `
-                <div class="gallery-card" data-id="${p.id}" data-path="${p.storagePath || ''}">
+                <div class="gallery-card" data-id="${p.id}">
                     <img src="${p.url}" alt="Work photo" loading="lazy">
                     <div class="gallery-card-overlay">
                         <span class="card-date">${formatDate(p.uploadedAt)}</span>
-                        <button class="btn-delete" onclick="deletePhoto('${p.id}', '${p.storagePath || ''}', event)">
+                        <button class="btn-delete" onclick="deletePhoto('${p.id}', event)">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -428,32 +441,14 @@
             if (np >= 1 && np <= total) renderGallery(np);
         }
 
-        // Real-time listener
-        db.collection('works').orderBy('uploadedAt', 'desc').onSnapshot(snapshot => {
-            allPhotos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const total = Math.ceil(allPhotos.length / PER_PAGE);
-            if (currentPage > total && total > 0) currentPage = total;
-            renderGallery(currentPage);
-        }, err => {
-            console.error('Firestore error:', err);
-            document.getElementById('galleryGrid').innerHTML =
-                '<div class="gallery-empty"><i class="fas fa-triangle-exclamation"></i><p>Could not load photos. Check Firebase config.</p></div>';
-        });
-
         // ── DELETE ────────────────────────────────────────────────────────────────
-        async function deletePhoto(id, storagePath, e) {
+        function deletePhoto(id, e) {
             e.stopPropagation();
             if (!confirm('Delete this photo? This cannot be undone.')) return;
-            try {
-                await db.collection('works').doc(id).delete();
-                if (storagePath) {
-                    await storage.ref(storagePath).delete().catch(() => {});
-                }
-                showToast('Photo deleted.', 'success');
-            } catch (err) {
-                console.error(err);
-                showToast('Delete failed. Try again.', 'error');
-            }
+            const photos = loadPhotos().filter(p => p.id !== id);
+            savePhotos(photos);
+            showToast('Photo deleted.', 'success');
+            refreshGallery();
         }
 
         // ── UPLOAD ────────────────────────────────────────────────────────────────
@@ -486,62 +481,86 @@
                 showToast(`${file.name} is not an image.`, 'error'); return;
             }
 
-            const id = `qi_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+            const itemId = `qi_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+            // Build queue item SYNCHRONOUSLY before FileReader starts —
+            // this guarantees the DOM elements exist when onprogress/onload fire.
+            const previewUrl = URL.createObjectURL(file); // instant thumbnail
+            const item = document.createElement('div');
+            item.className = 'queue-item';
+            item.id = itemId;
+            item.innerHTML = `
+                <img class="queue-thumb" src="${previewUrl}" alt="">
+                <div class="queue-info">
+                    <div class="queue-name">${file.name}</div>
+                    <div class="queue-size">${fmtSize(file.size)}</div>
+                    <div class="progress-bar-wrap"><div class="progress-bar" id="pb_${itemId}" style="width:0%"></div></div>
+                </div>
+                <span class="queue-status" id="qs_${itemId}">Reading…</span>
+            `;
+            queue.prepend(item);
+
             const reader = new FileReader();
-            reader.onload = ev => {
-                const item = document.createElement('div');
-                item.className = 'queue-item';
-                item.id = id;
-                item.innerHTML = `
-                    <img class="queue-thumb" src="${ev.target.result}" alt="">
-                    <div class="queue-info">
-                        <div class="queue-name">${file.name}</div>
-                        <div class="queue-size">${fmtSize(file.size)}</div>
-                        <div class="progress-bar-wrap"><div class="progress-bar" id="pb_${id}"></div></div>
-                    </div>
-                    <span class="queue-status" id="qs_${id}">0%</span>
-                `;
-                queue.prepend(item);
 
-                const storagePath = `works/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-                const ref = storage.ref(storagePath);
-                const task = ref.put(file);
-
-                task.on('state_changed',
-                    snap => {
-                        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-                        document.getElementById(`pb_${id}`).style.width = pct + '%';
-                        document.getElementById(`qs_${id}`).textContent = pct + '%';
-                    },
-                    err => {
-                        console.error(err);
-                        const qs = document.getElementById(`qs_${id}`);
-                        if (qs) { qs.textContent = 'Error'; qs.className = 'queue-status error'; }
-                        showToast(`Upload failed: ${file.name}`, 'error');
-                    },
-                    async () => {
-                        try {
-                            const url = await ref.getDownloadURL();
-                            await db.collection('works').add({
-                                url,
-                                storagePath,
-                                filename: file.name,
-                                uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                            const qs = document.getElementById(`qs_${id}`);
-                            if (qs) { qs.textContent = 'Done ✓'; qs.className = 'queue-status done'; }
-                            showToast(`${file.name} uploaded!`, 'success');
-                            // Remove queue item after 4s
-                            setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 4000);
-                        } catch (e) {
-                            console.error(e);
-                            showToast('Error saving to database.', 'error');
-                        }
-                    }
-                );
+            reader.onprogress = ev => {
+                if (ev.lengthComputable) {
+                    const pct = Math.round((ev.loaded / ev.total) * 100);
+                    document.getElementById(`pb_${itemId}`).style.width = pct + '%';
+                    document.getElementById(`qs_${itemId}`).textContent = pct + '%';
+                }
             };
+
+            reader.onload = ev => {
+                const dataUrl = ev.target.result;
+                URL.revokeObjectURL(previewUrl); // free memory
+
+                const photo = {
+                    id: `photo_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+                    url: dataUrl,
+                    filename: file.name,
+                    uploadedAt: Date.now()
+                };
+
+                try {
+                    const photos = loadPhotos();
+                    photos.push(photo);
+                    savePhotos(photos);
+
+                    document.getElementById(`pb_${itemId}`).style.width = '100%';
+                    const qs = document.getElementById(`qs_${itemId}`);
+                    qs.textContent = 'Done ✓';
+                    qs.className = 'queue-status done';
+
+                    showToast(`${file.name} uploaded!`, 'success');
+                    refreshGallery();
+
+                    setTimeout(() => {
+                        const el = document.getElementById(itemId);
+                        if (el) el.remove();
+                    }, 4000);
+                } catch (err) {
+                    console.error(err);
+                    const qs = document.getElementById(`qs_${itemId}`);
+                    qs.textContent = 'Error';
+                    qs.className = 'queue-status error';
+                    showToast(`Upload failed: storage may be full.`, 'error');
+                }
+            };
+
+            reader.onerror = () => {
+                URL.revokeObjectURL(previewUrl);
+                const qs = document.getElementById(`qs_${itemId}`);
+                qs.textContent = 'Error';
+                qs.className = 'queue-status error';
+                showToast(`Failed to read: ${file.name}`, 'error');
+            };
+
             reader.readAsDataURL(file);
         }
+
+        // ── INIT ─────────────────────────────────────────────────────────────────
+        refreshGallery();
     </script>
 </body>
 </html>
+

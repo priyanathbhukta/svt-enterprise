@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
@@ -188,13 +188,15 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="../../firebase-config.js"></script>
+    <!-- Login Script (no Firebase) -->
     <script>
         const ADMIN_ID   = '6291589954';
         const ADMIN_PASS = '8582938476Svt';
+
+        // If already logged in, go straight to dashboard
+        if (sessionStorage.getItem('svt_admin')) {
+            window.location.href = '/admin/dashboard/';
+        }
 
         // Toggle password visibility
         document.getElementById('togglePwd').addEventListener('click', function () {
@@ -204,24 +206,8 @@
             this.innerHTML = `<i class="fas ${show ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
         });
 
-        // Init Firebase
-        try {
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        } catch (e) { console.warn('Firebase init skipped:', e); }
-
-        const auth = typeof firebase !== 'undefined' ? firebase.auth() : null;
-
-        // If already logged in, go straight to dashboard
-        if (auth) {
-            auth.onAuthStateChanged(user => {
-                if (user && sessionStorage.getItem('svt_admin')) {
-                    window.location.href = '/admin/dashboard/';
-                }
-            });
-        }
-
         // Login handler
-        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const id  = document.getElementById('adminId').value.trim();
             const pwd = document.getElementById('adminPwd').value;
@@ -238,15 +224,12 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Signing in...';
 
-            try {
-                if (auth) await auth.signInAnonymously();
-            } catch (firebaseErr) {
-                console.warn('Firebase anon auth failed:', firebaseErr);
-            }
-
             sessionStorage.setItem('svt_admin', '1');
-            window.location.href = '/admin/dashboard/';
+            setTimeout(() => {
+                window.location.href = '/admin/dashboard/';
+            }, 600);
         });
     </script>
 </body>
 </html>
+

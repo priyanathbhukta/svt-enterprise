@@ -99,7 +99,7 @@ contactForm.addEventListener('submit', (e) => {
         });
 });
 
-// ─── Previous Works Gallery (Firebase Firestore) ────────────────────────────
+// ─── Previous Works Gallery (localStorage + Static Fallback) ────────────────
 const WORKS_PER_PAGE = 9;
 let allWorksData     = [];
 let currentWorksPage = 1;
@@ -170,26 +170,30 @@ function changeWorksPage(delta) {
 }
 
 function initWorksGallery() {
+    // Always show BOTH: admin-uploaded photos (from localStorage) + static built-in images.
+    // Uploaded photos come first (newest first), static ones appear after.
+    let uploadedPhotos = [];
     try {
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        db.collection('works')
-          .orderBy('uploadedAt', 'desc')
-          .onSnapshot(snapshot => {
-              allWorksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-              if (!allWorksData.length) { showStaticWorks(); return; }
-              const total = Math.ceil(allWorksData.length / WORKS_PER_PAGE);
-              if (currentWorksPage > total) currentWorksPage = 1;
-              renderWorksPage(currentWorksPage);
-          }, err => {
-              console.warn('Firebase gallery error:', err);
-              showStaticWorks();
-          });
+        const stored = localStorage.getItem('svt_works');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+                uploadedPhotos = parsed.sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
+            }
+        }
     } catch (e) {
-        console.warn('Firebase not available, using static fallback:', e);
-        showStaticWorks();
+        console.warn('Could not read localStorage works:', e);
     }
+
+    // Static images always included as the base gallery
+    const staticPhotos = STATIC_FALLBACK.map(url => ({ url, uploadedAt: null }));
+
+    // Merge: admin uploads first, then static
+    allWorksData = [...uploadedPhotos, ...staticPhotos];
+    renderWorksPage(1);
 }
 
 initWorksGallery();
 // ────────────────────────────────────────────────────────────────────────────
+
+
