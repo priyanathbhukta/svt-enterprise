@@ -461,9 +461,41 @@ img {
     }
 }
 
+/* Mobile: logo + proprietor side-by-side */
 @media (max-width: 600px) {
     .about-visuals {
-        flex-direction: column;
+        flex-direction: row;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .about-logo-wrapper {
+        flex: 1;
+        padding: 16px;
+        min-width: 0;
+    }
+
+    .about-logo {
+        max-width: 100%;
+    }
+
+    .proprietor-photo-wrapper {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .proprietor-photo {
+        height: 180px;
+        width: 100%;
+        object-fit: cover;
+    }
+
+    .proprietor-name {
+        font-size: 1rem;
+    }
+
+    .proprietor-designation {
+        font-size: 0.75rem;
     }
 }
 
@@ -637,12 +669,22 @@ img {
 @media (max-width: 768px) {
     .works-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .work-card img {
+        height: 160px;
     }
 }
 
 @media (max-width: 480px) {
     .works-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .work-card img {
+        height: 130px;
     }
 }
 
@@ -774,8 +816,27 @@ img {
 }
 
 @media (max-width: 768px) {
+    /* Services: keep 2x2 grid on tablet/mobile */
     .services-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .service-card-img img {
+        height: 160px;
+    }
+
+    .service-info {
+        padding: 16px;
+    }
+
+    .service-info h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+
+    .service-info p {
+        font-size: 0.85rem;
     }
 
     .nav-links {
@@ -807,6 +868,170 @@ img {
     
     .section-title {
         font-size: 2rem;
+    }
+
+    /* Contact layout stacks on tablet */
+    .contact-form-wrapper, .contact-info-wrapper {
+        padding: 24px;
+    }
+
+    /* Products grid: 2 columns on tablet */
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .product-img {
+        height: 150px;
+    }
+
+    .product-info {
+        padding: 16px;
+    }
+
+    .product-info h3 {
+        font-size: 1rem;
+    }
+
+    .product-info p {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .section {
+        padding: 60px 0;
+    }
+
+    /* Services: 2x2 grid on mobile */
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 30px;
+    }
+
+    .service-card-img img {
+        height: 120px;
+    }
+
+    .service-info {
+        padding: 12px;
+    }
+
+    .service-info h3 {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    .service-info p {
+        font-size: 0.78rem;
+        line-height: 1.4;
+    }
+
+    /* Products: 2 columns on mobile */
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 30px;
+    }
+
+    .product-img {
+        height: 110px;
+    }
+
+    .product-info {
+        padding: 12px;
+    }
+
+    .product-info h3 {
+        font-size: 0.88rem;
+        margin-bottom: 6px;
+    }
+
+    .product-info p {
+        font-size: 0.78rem;
+        line-height: 1.4;
+    }
+
+    /* Contact: shrink padding and font sizes */
+    .contact-form-wrapper, .contact-info-wrapper {
+        padding: 20px 16px;
+    }
+
+    .contact-card h3 {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+    }
+
+    .info-list li {
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .info-list i {
+        font-size: 1.1rem;
+    }
+
+    .info-list strong {
+        font-size: 0.9rem;
+    }
+
+    .info-list p, .info-list a {
+        font-size: 0.82rem;
+    }
+
+    .form-group input, .form-group textarea {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+
+    /* Hero */
+    .hero-title {
+        font-size: 1.8rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .hero-tagline {
+        font-size: 0.85rem;
+        padding: 6px 14px;
+    }
+
+    /* Section title */
+    .section-title {
+        font-size: 1.6rem;
+    }
+
+    /* Stats */
+    .stats {
+        gap: 16px;
+    }
+
+    .stat-item h4 {
+        font-size: 1.6rem;
+    }
+
+    /* GST badge wraps nicely */
+    .gst-badge {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+
+    .gst-number {
+        font-size: 0.85rem;
+        word-break: break-all;
+    }
+
+    /* Pagination on mobile */
+    .btn-page-pub {
+        padding: 9px 14px;
+        font-size: 0.8rem;
+    }
+
+    .works-pagination {
+        gap: 8px;
     }
 }
 
